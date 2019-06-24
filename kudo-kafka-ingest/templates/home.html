@@ -10,7 +10,7 @@ Home Page
             {
                 $.ajax({
                     type: "get",
-                    url: "https://a8fbb8573968111e995cd0a5d6b01cf9-1977057768.us-west-2.elb.amazonaws.com/messages",
+                    url: "{{ messages_endpoint }}",
                     success:function(data)
                     {
                         //console.log the response
@@ -18,7 +18,7 @@ Home Page
                         $("div.messages").html(data);
                     }
                 });
-            }, 10000);
+            }, 5000);
     </script>
     <div class="messages">Loading...</div>
 </div>

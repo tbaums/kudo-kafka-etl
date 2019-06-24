@@ -19,7 +19,7 @@ def home():
     # message_queue_count = len(result)
     # last_transaction = result[-1]
     # return f'\n Version 0.1.1  \n Website running at host {hostname} /// \n Length of queue: {message_queue_count} /// Last transaction: {last_transaction}'
-    return render_template('home.html')
+    return render_template('home.html', messages_endpoint="https://a8fbb8573968111e995cd0a5d6b01cf9-1977057768.us-west-2.elb.amazonaws.com/messages")
 
 @app.route('/health')
 def health():
