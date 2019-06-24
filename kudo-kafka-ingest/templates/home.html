@@ -15,10 +15,11 @@ Home Page
                     {
                         //console.log the response
                         console.log(data);
+                        $("div.messages").html(data);
                     }
                 });
             }, 10000);
     </script>
-    
+    <div class="messages">Loading...</div>
 </div>
 {% endblock %}
