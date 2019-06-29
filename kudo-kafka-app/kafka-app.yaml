@@ -6,15 +6,15 @@ metadata:
   creationTimestamp: null
   generation: 1
   labels:
-    app: kafka-ingest
-  name: kafka-ingest
+    app: kafka-app
+  name: kafka-app
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: kafka-ingest
+      app: kafka-app
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -24,10 +24,10 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        app: kafka-ingest
+        app: kafka-app
     spec:
       containers:
-      - image: tbaums/kudo-kafka-ingest:latest
+      - image: tbaums/kudo-kafka-app:latest
         imagePullPolicy: Always
         name: kafka-ingest
         resources: {}
@@ -35,7 +35,7 @@ spec:
         terminationMessagePolicy: File
         env:
         - name: BROKER_SERVICE
-          value: 192.168.80.77:9093
+          value: kafka-kafka-0.kafka-svc:9092
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
