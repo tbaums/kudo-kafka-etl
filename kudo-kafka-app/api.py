@@ -16,6 +16,14 @@ logging.basicConfig(level=logging.DEBUG)
 app.logger.addHandler(logging.StreamHandler())
 app.logger.setLevel(logging.INFO)
 
+###########################
+# Remote Control Interface 
+###########################
+
+@app.route('/rc')
+def rcUI():
+    return render_template('rc.html')
+
 
 ## Live updates a list of Numbers being read from a kafka topic called "numbers"
 
