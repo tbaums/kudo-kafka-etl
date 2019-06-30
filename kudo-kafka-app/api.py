@@ -12,7 +12,7 @@ from kafka import KafkaConsumer
 
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 app.logger.addHandler(logging.StreamHandler())
 app.logger.setLevel(logging.INFO)
 
@@ -23,6 +23,22 @@ app.logger.setLevel(logging.INFO)
 @app.route('/rc')
 def rcUI():
     return render_template('rc.html')
+
+
+###########################
+# Set color
+###########################
+
+@app.route('/set-color/<color>')
+def set_color(color):
+    x = kafka_generator.send_message({"topic": "color","value": color})
+    return Response(str(x), mimetype='text/plain')
+
+@app.route('/get-color')
+def get_color():
+    result = kafka_ingest.get_messages("color")
+
+    return Response(str(result), mimetype='text/plain')
 
 
 ## Live updates a list of Numbers being read from a kafka topic called "numbers"

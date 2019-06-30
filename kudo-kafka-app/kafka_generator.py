@@ -19,7 +19,6 @@ print("App started X")
 
 def get_producer():
     try:
-        logging.debug("************************ \n Getting producer... \n")
         # producer = KafkaProducer(
         #                         bootstrap_servers=[os.environ['BROKER_SERVICE']]
         #                         # , wakeup_timeout_ms=30000
@@ -32,10 +31,17 @@ def get_producer():
                                 , retries=1
                                 # , batch_size=0
                                 )
-        logging.debug("Got producer........ \n")
         return producer
     except:
         logging.warning("could not connect to Kafka")
+
+def send_message(message):
+    producer = get_producer()
+    # return [message["topic"], message["value"]]
+    msg_json = {'color': message["value"]}
+    producer.send(message["topic"], value=msg_json)
+    producer.close()
+    return [message["topic"], msg_json]
 
 def send_messages(topic):
     # try:

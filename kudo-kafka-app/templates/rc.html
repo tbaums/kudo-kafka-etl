@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}
+Home Page
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <script>
+       // document.ready function
+       $(document).ready(function() {
+            // selector has to be . for a class name and # for an ID
+            $('.call').on ("click", function(e) {
+                e.preventDefault(); // prevent form from reloading page
+                
+                let x = $( this );
+                url = x.attr('url');
+                console.log(x)
+                console.log(url);
+                $.ajax({
+                    'url' : url,
+                    'type' : 'GET',
+                    'success' : function(data) {
+                        console.log("set color")
+                       }
+                    })
+                });
+        });
+    </script>
+       <script>
+            //    Polling script to check for color changes
+                setInterval(function()
+                    {
+                        $.ajax({
+                            type: "get",
+                            url: "/get-color",
+                            success:function(data)
+                            {
+                                //console.log the response
+                                console.log(data);
+                                $('.color').css("background-color", data.substring(2, data.length -2));
+                                $('div.color').html(data.substring(2, data.length -2));
+                            }
+                        });
+                    }, 7500);
+            </script>
+    <nav class="rc-nav">
+        <ul>
+            <li>
+                <a href="javascript:void(0)" class="call" url="/generate-numbers">Generate Numbers</a>
+            </li>
+            <li>
+                <a href="javascript:void(0)" class="call" url="/set-color/red">Set Color: Red</a>
+                <a href="javascript:void(0)" class="call" url="/set-color/blue">Set Color: Blue</a>
+                <a href="javascript:void(0)" class="call" url="/set-color/green">Set Color: Green</a>
+                <a href="javascript:void(0)" class="call" url="/set-color/purple">Set Color: Purple</a>
+            </li>
+        </ul>
+    </nav>
+    <div class="color" width=80% height=30px>Here is some text</div>
+</div>
+{% endblock %}
