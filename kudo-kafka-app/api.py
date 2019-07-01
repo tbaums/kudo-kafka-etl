@@ -4,9 +4,10 @@ import logging
 import kafka_ingest
 import kafka_generator
 import ifaddr
+import time
 
 
-from flask import Flask, Response, request, render_template
+from flask import Flask, Response, request, render_template, jsonify, stream_with_context, json
 from flask_api import status
 from kafka import KafkaConsumer
 
@@ -17,10 +18,10 @@ app.logger.addHandler(logging.StreamHandler())
 app.logger.setLevel(logging.INFO)
 
 ###########################
-# Remote Control Interface 
+# Remote Control Interface
 ###########################
 
-@app.route('/rc')
+@app.route('/v0alpha1/rc')
 def rcUI():
     return render_template('rc.html')
 
@@ -29,19 +30,42 @@ def rcUI():
 # Set color
 ###########################
 
-@app.route('/set-color/<color>')
+@app.route('/v0alpha1/set-color/<color>')
 def set_color(color):
     x = kafka_generator.send_message({"topic": "color","value": color})
     return Response(str(x), mimetype='text/plain')
 
 @app.route('/get-color')
 def get_color():
-    result = kafka_ingest.get_messages("color")
+    consumer = kafka_ingest.get_consumer("color")
 
-    return Response(str(result), mimetype='text/plain')
+    messages = []
+    for message in consumer:
+        messages.append(message)
+    consumer.commit()
+    consumer.close()    
+
+    return Response(str(messages), mimetype='text/plain')
 
 
+@app.route('/v0alpha1/get-color')
+def stream():
+    def f():
+        try:
+            consumer = kafka_ingest.get_consumer("color")
+        except:
+            "could not connect to Kafka"
+    
+        for message in consumer:
+            yield str(json.dumps(message).split(',')[6])
+        consumer.commit()
+        consumer.close()
+    return Response(stream_with_context(f()), mimetype="text/event-stream")
+
+
+########################################################################################    
 ## Live updates a list of Numbers being read from a kafka topic called "numbers"
+########################################################################################
 
 @app.route('/numbers')
 def numbers():

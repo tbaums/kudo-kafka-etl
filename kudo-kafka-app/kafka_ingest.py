@@ -1,9 +1,11 @@
 # Before running this program run pip install kafka-python
 import datetime
 import os, sys
+import uuid
 from flask import current_app
 from kafka import KafkaConsumer
 from json import loads
+
 
 
 
@@ -19,7 +21,7 @@ def get_consumer(topic):
             , bootstrap_servers=[os.environ['BROKER_SERVICE']]
             , auto_offset_reset='earliest'
             , enable_auto_commit=True
-            , consumer_timeout_ms=5000
+            , consumer_timeout_ms=500
             , value_deserializer=lambda x: loads(x.decode('ascii'))
             , group_id='my-group'
             )
@@ -34,17 +36,22 @@ def get_consumer(topic):
         return "failed to connect to Kafka"
 
 
-def get_messages(topic):
-    print("E")
-    consumer = get_consumer(str(topic))
+# def get_messages(topic):
+#     print("E")
+#     consumer = get_consumer(str(topic))
 
-    messages = []
-    for message in consumer:
-        print(str(message))
-        # current_app.debug(str(message))
-        # messages.append({str(message.value) : str(message.key)})
-        messages.append(message.value['color'])
-    consumer.commit()
-    consumer.close()
-    # sys.stdout.write(str(messages))
-    return messages
+#     messages = []
+#     for message in consumer:
+#         print(str(message))
+#         # current_app.debug(str(message))
+#         # messages.append({str(message.value) : str(message.key)})
+#         messages.append(message.value['color'])
+#     consumer.commit()
+#     consumer.close()
+#     # sys.stdout.write(str(messages))
+#     return messages
+
+# def get_messages(topic):
+#     consumer = get_consumer(str(topic))
+#     for message in consumer:
+#         yield message
