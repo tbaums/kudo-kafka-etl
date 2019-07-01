@@ -12,7 +12,7 @@ from json import loads
 print("App started X")
 
 
-def get_consumer(timeout_ms, topic):
+def get_consumer(timeout_ms, group_id, topic):
 
     try:
         # current_app.debug("Getting consumer ***************************************")
@@ -23,7 +23,7 @@ def get_consumer(timeout_ms, topic):
             , enable_auto_commit=True
             , consumer_timeout_ms=timeout_ms
             , value_deserializer=lambda x: loads(x.decode('ascii'))
-            , group_id='my-group'
+            , group_id=str(group_id)
             )
         # current_app.debug("Got consumer ***************************************")
         

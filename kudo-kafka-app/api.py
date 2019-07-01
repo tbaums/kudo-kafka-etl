@@ -40,7 +40,7 @@ def generate_ticker_stream():
 def get_stocks_stream():
     def f():
         try:
-            consumer = kafka_ingest.get_consumer(10000, "stocks")
+            consumer = kafka_ingest.get_consumer(10000, 'stocks-group', "stocks")
         except:
             "could not connect to Kafka"
     
@@ -66,7 +66,7 @@ def set_color(color):
 
 @app.route('/get-color')
 def get_color():
-    consumer = kafka_ingest.get_consumer("color")
+    consumer = kafka_ingest.get_consumer(200, "color")
 
     messages = []
     for message in consumer:
@@ -81,7 +81,7 @@ def get_color():
 def stream():
     def f():
         try:
-            consumer = kafka_ingest.get_consumer(500, "color")
+            consumer = kafka_ingest.get_consumer(500, 'color-group',"color")
         except:
             "could not connect to Kafka"
     
