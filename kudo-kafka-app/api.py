@@ -5,6 +5,7 @@ import kafka_ingest
 import kafka_generator
 import ifaddr
 import time
+import random
 
 
 from flask import Flask, Response, request, render_template, jsonify, stream_with_context, json
@@ -24,6 +25,34 @@ app.logger.setLevel(logging.INFO)
 @app.route('/v0alpha1/rc')
 def rcUI():
     return render_template('rc.html')
+
+###########################
+# Set color
+###########################
+
+@app.route('/v0alpha1/generate-stocks-stream')
+def generate_ticker_stream():
+    for _ in range(10000):
+        x = kafka_generator.send_message({"topic" : "stocks", "value": {"name": "GE", "value": random.randint(1,99)}})
+    return Response(str(x), mimetype='text/plain')
+
+@app.route('/v0alpha1/get-stocks-stream')
+def get_stocks_stream():
+    def f():
+        try:
+            consumer = kafka_ingest.get_consumer(10000, "stocks")
+        except:
+            "could not connect to Kafka"
+    
+        for message in consumer:
+            # yield str(json.dumps(message).split(',')[6])
+            yield str(json.dumps(message.value["stocks"]))
+            # yield str(json.dumps(message).split(',')[6])
+        consumer.commit()
+        consumer.close()
+    return Response(stream_with_context(f()), mimetype="text/event-stream")
+
+
 
 
 ###########################
@@ -52,7 +81,7 @@ def get_color():
 def stream():
     def f():
         try:
-            consumer = kafka_ingest.get_consumer("color")
+            consumer = kafka_ingest.get_consumer(500, "color")
         except:
             "could not connect to Kafka"
     

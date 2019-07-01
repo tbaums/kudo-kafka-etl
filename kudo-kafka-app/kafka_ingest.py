@@ -12,7 +12,7 @@ from json import loads
 print("App started X")
 
 
-def get_consumer(topic):
+def get_consumer(timeout_ms, topic):
 
     try:
         # current_app.debug("Getting consumer ***************************************")
@@ -21,7 +21,7 @@ def get_consumer(topic):
             , bootstrap_servers=[os.environ['BROKER_SERVICE']]
             , auto_offset_reset='earliest'
             , enable_auto_commit=True
-            , consumer_timeout_ms=500
+            , consumer_timeout_ms=timeout_ms
             , value_deserializer=lambda x: loads(x.decode('ascii'))
             , group_id='my-group'
             )

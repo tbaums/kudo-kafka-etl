@@ -38,7 +38,7 @@ def get_producer():
 def send_message(message):
     producer = get_producer()
     # return [message["topic"], message["value"]]
-    msg_json = {'color': message["value"]}
+    msg_json = {message["topic"] : message["value"]}
     producer.send(message["topic"], value=msg_json)
     producer.close()
     return [message["topic"], msg_json]
