@@ -30,10 +30,13 @@ def rcUI():
 # Set color
 ###########################
 
-@app.route('/v0alpha1/generate-stocks-stream')
-def generate_ticker_stream():
-    for _ in range(10000):
-        x = kafka_generator.send_message({"topic" : "stocks", "value": {"name": "GE", "value": random.randint(1,99)}})
+@app.route('/v0alpha1/generate-stocks-stream/<ticks>')
+def generate_ticker_stream(ticks):
+    price = 50
+    for _ in range(int(ticks)):
+        price = round((price + random.randint(-99,99) / 100), 2)
+        x = kafka_generator.send_message({"topic" : "stocks", "value": {"name": "GE", "value": price}})
+        time.sleep(.05)
     return Response(str(x), mimetype='text/plain')
 
 @app.route('/v0alpha1/get-stocks-stream')

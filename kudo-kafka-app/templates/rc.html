@@ -4,6 +4,9 @@ Home Page
 {% endblock %}
 
 {% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
 <div class="container">
     <script>
         // document.ready function
@@ -77,16 +80,30 @@ Home Page
                                 progressResponse = response.substring(lastResponseLength);
                                 lastResponseLength = response.length;
                             }
-
                             try {
+                                console.log(progressResponse);
                                 var parsedResponse = JSON.parse(progressResponse);
-                                console.log(parsedResponse);
-                                $('.stocks').text(JSON.stringify(parsedResponse));
-                                console.log('setting height to :', parsedResponse.value + '%')
-                                $('.price-bar__ge').css('height', parsedResponse.value + 'px');
-
-                            }  
-                            catch(err) {
+                                // console.log(parsedResponse);
+                                // $('.stocks').text(JSON.stringify(parsedResponse));
+                                // console.log('setting height to :', parsedResponse.value + '%');
+                                // $('.price-bar__ge').css('height', parsedResponse.value + 'px');
+                                // console.log(new Date().toLocaleTimeString())
+                                let timeStamp = moment().format();
+                                let dataPt = { x: timeStamp, y: parsedResponse.value }
+                                console.log("timestamp: ", timeStamp);
+                                if (chart.data.datasets[0].data.length > 100) {
+                                    chart.data.datasets[0].data.push(dataPt);
+                                    chart.data.datasets[0].data = chart.data.datasets[0].data.slice(1, 100);
+                                }
+                                else {
+                                    chart.data.datasets[0].data.push(dataPt);
+                                }
+                                
+                                console.log(chart.data.datasets[0].data);
+                                chart.options.scales.xAxes[0].time.min = moment().subtract(60, 'seconds').format();
+                                chart.update();
+                            }
+                            catch (err) {
                                 console.log(err)
                             }
                         }
@@ -117,7 +134,7 @@ Home Page
                 <a href="javascript:void(0)" class="call" url="/v0alpha1/set-color/purple">Set Color: Purple</a>
             </li>
             <li>
-                <a href="javascript:void(0)" class="call" url="/v0alpha1/generate-stocks-stream">Generate Stock
+                <a href="javascript:void(0)" class="call" url="/v0alpha1/generate-stocks-stream/10000">Generate Stock
                     Stream</a>
             </li>
             <li>
@@ -126,9 +143,51 @@ Home Page
         </ul>
     </nav>
     <div class="color" width=80% height=30px>Here is some text</div>
-    <div class="stocks" width=80% height=30px>Here is some text</div>
-    <div class="price-bar" width=80% height=100px style="position:relative;height:100px;background-color:black">&nbsp;
-        <div class="price-bar__ge"  width=10% style="position:absolute;bottom:0px;height:0px;width:10%;background-color:green">&nbsp;</div>
-    </div>
 </div>
+
+
+
+<canvas id="myChart" width="400" height="400"></canvas>
+<script>
+    let scaleMin = moment();
+    scaleMin = scaleMin.subtract(10, 'seconds').format();
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'line',
+
+        // The data for our dataset
+        data: {
+            labels: ['Stock Prices'],
+            datasets: [{
+                label: 'GE',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: [],
+                fill: false,
+                lineTension: 0.1
+            }]
+        },
+        // Configuration options go here
+        options: {
+            animation: false,
+            scales: {
+                xAxes: [{
+                    type: 'time'
+                    , distribution: 'linear'
+                    , time: {
+                        min: scaleMin
+                    }
+                }],
+                yAxes: [{
+                    ticks: {
+                        suggestedMin: 25,
+                        suggestedMax: 75
+                    }
+                }]
+            }
+        }
+    });
+</script>
+
 {% endblock %}
