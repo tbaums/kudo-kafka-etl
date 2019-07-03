@@ -57,13 +57,14 @@ if __name__ == "__main__":
             if msgs_processed_this_connection % 10000 == 0:
                 processing_time = get_current_time() - get_start_time()
                 msgs_processed_per_second = str(round(msgs_processed_this_connection / float(processing_time.seconds + processing_time.microseconds / 1000000)))
-                sys.stdout.write(
-                    str(
-                        {
+                
+                log_msg = str(
+                            {
                             "messages_processed_this_connection": msgs_processed_this_connection,
                             "processing_time": str(processing_time),
                             "messages_processed_per_second": msgs_processed_per_second
-                        }
-                    )
-                )
+                            }
+                        )
+                print(socket.gethostname(), log_msg)
+                sys.stdout.write(log_msg)
 

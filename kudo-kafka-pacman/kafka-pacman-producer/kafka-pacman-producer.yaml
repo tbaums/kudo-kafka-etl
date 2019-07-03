@@ -39,7 +39,7 @@ spec:
         - name: MESSAGES_PER_BATCH
           value: '10000'
         - name: PACMAN_JOBS_TOPIC
-          value: a8
+          value: a11
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

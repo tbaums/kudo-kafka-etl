@@ -52,6 +52,7 @@ if __name__ == '__main__':
         log('created new topic')
     except Exception as e:
         log('failed to create NewTopic w/exception: ', e )
+        sys.exit()
 
     producer = get_producer()
     msgs_sent_counter = 0
@@ -63,7 +64,6 @@ if __name__ == '__main__':
         
         msgs_sent_counter += 1
         if (msgs_sent_counter % 10000 == 0):
-            log_string = '-----Msgs sent: ' + str(msgs_sent_counter)
-            print(log_string)
+            log_string = '-----Msgs sent: ' + str(msgs_sent_counter) + ' to topic ' + os.environ["PACMAN_JOBS_TOPIC"]
             log(log_string)
-        time.sleep(.000000001)
+        time.sleep(.000000000001)

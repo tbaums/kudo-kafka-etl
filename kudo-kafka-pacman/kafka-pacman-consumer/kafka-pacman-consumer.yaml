@@ -37,7 +37,7 @@ spec:
         - name: BROKER_SERVICE
           value: kafka-kafka-0.kafka-svc:9092
         - name: PACMAN_JOBS_TOPIC
-          value: a7
+          value: a11
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
