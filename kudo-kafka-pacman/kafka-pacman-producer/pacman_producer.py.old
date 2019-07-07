@@ -1,0 +1,116 @@
+import datetime
+import os, sys
+import socket
+import time
+import logging
+
+from kafka import KafkaProducer, admin
+from kafka.admin import KafkaAdminClient
+from json import loads, dumps
+
+logging.basicConfig(level=logging.INFO)
+
+
+
+def get_producer():
+    try:
+        producer = KafkaProducer(bootstrap_servers=[os.environ['BROKER_SERVICE']]
+                                , value_serializer=lambda x: dumps(x).encode('utf-8')
+                                , acks=1
+                                , retries=1
+                                )
+        return producer
+    except:
+        print("could not connect to Kafka")
+
+def send_message(producer, message):
+    msg_json = {message["topic"] : message["value"]}
+    return producer.send(message["topic"], value=msg_json)
+
+# Use KafkaAdminClient to create topic with multiple partitions for future consumers 
+# (if none exists already)
+def get_admin_client():
+    try:
+        admin_client = KafkaAdminClient(bootstrap_servers=os.environ['BROKER_SERVICE'], client_id='admin')
+        return admin_client
+    except:
+        print("Could not get admin_client")
+        sys.exit()
+
+def create_topic(admin_client):
+    topic_list = []
+    topic_list.append(NewTopic(name=os.environ["PACMAN_JOBS_TOPIC"], num_partitions=5, replication_factor=1))
+    return admin_client.create_topics(new_topics=topic_list, validate_only=False)
+
+
+
+batch = 1
+
+try:
+    scale = int(os.environ['MESSAGES_PER_BATCH'])
+except:
+    print("scale must be an integer represented as a string in kafka-pacman-producer.yaml")
+    sys.exit()
+
+try:
+    # print("**************** Trying to delete topic 'pacman-jobs'........")
+    admin_client = get_admin_client()
+    # try:
+    #     admin_client.delete_topics(['pacman-jobs'], timeout_ms=10000)
+    #     print("**************** Deleted topic 'pacman-jobs'........")
+
+    # except:
+    #     pass
+    print("pacman-jobs-group consumer offsets list: ", admin_client.list_consumer_group_offsets('pacman-jobs-group'))
+    topic_list = []
+    print("******** trying to create topic")
+    try:
+        topic = kafka.kafka.admin.NewTopic(name=os.environ["PACMAN_JOBS_TOPIC"], num_partitions=5, replication_factor=1)
+        print("************************Topic: ", topic)
+        topic_list.append(topic)
+        admin_client.create_topics(new_topics=topic_list, validate_only=False)
+    except:
+        print("could not create topic")
+        pass
+except:
+    print("Could not get admin client")
+    sys.exit()
+
+#TODO why doesn't this work?
+# try:
+#     print("**************** Getting admin client........")
+#     admin_client = get_admin_client()
+#     print("**************** Got admin client........")
+#     print("**************** Trying to create topic........")
+#     print(admin_client)
+#     topic = create_topic(admin_client)
+#     print(topic)
+#     print("**************** Created topic........")
+# except:
+#     print('could not create topic')
+#     sys.exit()
+
+while True:
+    hostname = socket.gethostname()
+    
+
+    producer = get_producer()
+    for _ in range(scale):
+        msg_json = {"topic" : os.environ['PACMAN_JOBS_TOPIC'], "value" : _ + batch * scale }
+        if (msg_json["value"] % 10000 == 0):
+            print(socket.gethostname(), '*******', msg_json)
+        future = send_message(producer, msg_json)
+    
+    batch +=1
+    try:
+        record_metadata = future.get(timeout=10)
+        print (hostname, "--  --record_metadata.topic: ", record_metadata.topic)
+        print (hostname, "--  --record_metadata.partition: ", record_metadata.partition)
+        print (hostname, "--  --record_metadata.offset: ", record_metadata.offset)
+    except KafkaError:
+        # Decide what to do if produce request failed...
+        print("Failed to send message")
+        pass
+    
+    producer.close()
+    time.sleep(3)
