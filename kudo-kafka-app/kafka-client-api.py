@@ -39,13 +39,13 @@ app = Flask(__name__)
 # The `repetitions` parameter indicates the number of times you want the message written to Kafka.
 # This allows simulation of high load write behavior to Kafka.
 
-# WARNING: 
-# Due to the highly janky nature of this implementation, you CANNOT write any "," characters 
-# to Kafka, or the message will not be readable by READ_FROM_KAFKA.
 
 
 # READ_FROM_KAFKA ----------------------------------------------
 # read (topic: <string>, group_id: <string>)
+
+# NOTE: Messages are passed to the front end as JSON they are read of the Kafka queue.
+# Individual JSON objects are separated by '::::' and must be parsed thus on the frontend.
 
 
 # NOTE: The route below assumes that Ingress provided at /kafka-client-api.
@@ -68,9 +68,18 @@ def read():
     app.logger.info("Request query_string: " + str(query_string))
     topic = query_string["topic"][0]
     group_id = query_string["group_id"][0]
-
-    read_from_kafka(topic, group_id)
-    return Response("READ REQUEST RECEIVED", mimetype="text/plain")
+    # NOTE: read_from_kafka() is included here to facilitate stream_with_context to FE.
+    def read_from_kafka():
+        try:
+            consumer_client = get_consumer(topic, group_id)
+        except Exception as e:
+            app.logger.error("Could not create consumer_client with error " + str(e))
+        for message in consumer_client:
+            app.logger.debug(message)
+            # NB: can only 'yield' a string
+            yield json.loads(message.value)  + "::::"
+        consumer_client.close()
+    return Response(stream_with_context(read_from_kafka()), mimetype="application/json")
 
 
 ###################################
@@ -119,29 +128,11 @@ def get_consumer(topic, group_id):
             bootstrap_servers=[os.environ["BROKER_SERVICE"]],
             auto_offset_reset="earliest",
             enable_auto_commit=True,
-            group_id=str(group_id)
+            group_id=str(group_id),
         )
         return consumer
     except Exception as e:
         return "failed to connect KafkaConsumer with error: " + str(e)
-
-
-def read_from_kafka(topic, group_id):
-    try:
-        consumer_client = get_consumer(topic, group_id)
-    except Exception as e:
-        app.logger.error("Could not create consumer_client with error " + str(e))
-
-    messages = []
-    for message in consumer_client:
-        # app.logger.info(str(json.dumps(message)))
-        # msg = json.loads(json.dumps(str(message)))
-        # trim off "ConsumerRecord(" string from beggining of message and ")" from end.
-        # trimmed_msg = msg[15 : len(msg) - 2]
-        # payload = msg.split(",")
-
-        app.logger.info(json.loads(message.value))
-    consumer_client.close()
 
 
 ###################################
