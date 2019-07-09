@@ -65,7 +65,7 @@ def write():
 @app.route("/kafka-client-api/read", methods=["GET"])
 def read():
     query_string = urllib.parse.parse_qs(request.query_string.decode("UTF-8"))
-    app.logger.info("Request query_string: " + str(query_string))
+    app.logger.debug("Request query_string: " + str(query_string))
     topic = query_string["topic"][0]
     group_id = query_string["group_id"][0]
     # NOTE: read_from_kafka() is included here to facilitate stream_with_context to FE.
@@ -102,7 +102,6 @@ def write_to_kafka(topic, payload, repetitions):
     for _ in range(repetitions):
         try:
             producer_client.send(topic, payload)
-            # producer_client.send(topic, value="test")
             app.logger.info(
                 "Sent to Kafka. Topic: " + topic + " Value: " + str(payload)
             )
