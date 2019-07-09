@@ -1,16 +1,16 @@
-kubectl delete deploy/kafka-app
+kubectl delete deploy/kafka-client-api
 
 
-docker build . -t tbaums/kudo-kafka-app
-docker push tbaums/kudo-kafka-app
+docker build . -t tbaums/kafka-client-api
+docker push tbaums/kafka-client-api
 
 sleep 2
 
 
 
-kubectl apply -f kafka-app.yaml
-kubectl apply -f kafka-app-ingress.yaml
+kubectl apply -f kafka-client-api.yaml
+kubectl apply -f kafka-client-api-ingress.yaml
 
-sleep 15
-kubectl logs -f -l app=kafka-app 
+sleep 5
+kubectl logs -f -l app=kafka-client-api 
 
