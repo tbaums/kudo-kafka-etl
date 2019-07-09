@@ -40,11 +40,10 @@ app = Flask(__name__)
 # This allows simulation of high load write behavior to Kafka.
 
 
-
 # READ_FROM_KAFKA ----------------------------------------------
-# read (topic: <string>, group_id: <string>)
+# read (topic: <string>, (optional) group_id: <string>)
 
-# NOTE: Messages are passed to the front end as JSON they are read of the Kafka queue.
+# NOTE: Messages are passed to the front end as JSON they are read off the Kafka queue.
 # Individual JSON objects are separated by '::::' and must be parsed thus on the frontend.
 
 
@@ -67,18 +66,25 @@ def read():
     query_string = urllib.parse.parse_qs(request.query_string.decode("UTF-8"))
     app.logger.debug("Request query_string: " + str(query_string))
     topic = query_string["topic"][0]
-    group_id = query_string["group_id"][0]
+    # TODO: Implement proper UUID for default group_id 
+    if ("group_id" in query_string and len(query_string["group_id"]) > 0):
+        group_id = query_string["group_id"][0] 
+    else:
+        group_id = str(socket.gethostname()) + str(random.randint(0,9999999999))
     # NOTE: read_from_kafka() is included here to facilitate stream_with_context to FE.
     def read_from_kafka():
         try:
             consumer_client = get_consumer(topic, group_id)
         except Exception as e:
             app.logger.error("Could not create consumer_client with error " + str(e))
+
+
         for message in consumer_client:
-            app.logger.debug(message)
+            app.logger.info(message)
             # NB: can only 'yield' a string
-            yield json.loads(message.value)  + "::::"
+            yield str(json.loads(message.value)) + "::::"
         consumer_client.close()
+
     return Response(stream_with_context(read_from_kafka()), mimetype="application/json")
 
 
@@ -128,10 +134,38 @@ def get_consumer(topic, group_id):
             auto_offset_reset="earliest",
             enable_auto_commit=True,
             group_id=str(group_id),
+            
+            # connections_max_idle_ms – Close idle connections after the number of milliseconds 
+            # specified by this config. The broker closes idle connections after 
+            # connections.max.idle.ms, so this avoids hitting unexpected socket disconnected errors
+            # on the client. Default: 540000
+            connections_max_idle_ms=305001,
+            
+            # request_timeout_ms (int) – Client request timeout in milliseconds. Default: 305000. 
+            # Must be smaller than connections_max_idle_ms
+            # request_timeout_ms=1900,
+            
+            # session_timeout_ms (int) – The timeout used to detect failures when using Kafka’s 
+            # group management facilities. The consumer sends periodic heartbeats to indicate its 
+            # liveness to the broker. If no heartbeats are received by the broker before the expiration
+            #  of this session timeout, then the broker will remove this consumer from the group and
+            #  initiate a rebalance. Note that the value must be in the allowable range as configured
+            #  in the broker configuration by group.min.session.timeout.ms and 
+            # group.max.session.timeout.ms. Default: 10000
+            # session_timeout_ms=1899,
+
+            # heartbeat_interval_ms (int) – The expected time in milliseconds between heartbeats
+            #  to the consumer coordinator when using Kafka’s group management facilities. 
+            # Heartbeats are used to ensure that the consumer’s session stays active and to 
+            # facilitate rebalancing when new consumers join or leave the group. 
+            # The value must be set lower than session_timeout_ms, but typically 
+            # should be set no higher than 1/3 of that value. It can be adjusted even lower
+            #  to control the expected time for normal rebalances. Default: 3000
+            # heartbeat_interval_ms=1000,
         )
         return consumer
     except Exception as e:
-        return "failed to connect KafkaConsumer with error: " + str(e)
+        app.logger.error("failed to connect KafkaConsumer with error: " + str(e)) 
 
 
 ###################################
