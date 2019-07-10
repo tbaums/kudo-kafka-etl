@@ -52,7 +52,7 @@ app = Flask(__name__)
 @app.route("/kafka-client-api/write", methods=["POST"])
 def write():
     query_string = urllib.parse.parse_qs(request.query_string.decode("UTF-8"))
-    app.logger.info("Request query_string: " + str(query_string))
+    app.logger.debug("Request query_string: " + str(query_string))
     topic = query_string["topic"][0]
     payload = query_string["payload"][0]
     repetitions = int(query_string["repetitions"][0])
@@ -108,7 +108,7 @@ def write_to_kafka(topic, payload, repetitions):
     for _ in range(repetitions):
         try:
             producer_client.send(topic, payload)
-            app.logger.info(
+            app.logger.debug(
                 "Sent to Kafka. Topic: " + topic + " Value: " + str(payload)
             )
 
