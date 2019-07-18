@@ -44,3 +44,29 @@ spec:
       securityContext: {}
       terminationGracePeriodSeconds: 1
 status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-client-api-svc
+spec:
+  selector:
+    app: kafka-client-api
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  name: kafka-client-api-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /kafka-client-api
+        backend:
+          serviceName: kafka-client-api-svc
+          servicePort: 8080
